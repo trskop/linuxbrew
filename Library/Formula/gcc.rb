@@ -38,6 +38,7 @@ class Gcc < Formula
   option "without-fortran", "Build without the gfortran compiler"
   # enabling multilib on a host that can't run 64-bit results in build failures
   option "without-multilib", "Build without multilib support" if MacOS.prefer_64_bit?
+  option "with-sysroot", "Do not use system headers and libraries"
 
   depends_on "gmp"
   depends_on "libmpc"
@@ -45,6 +46,8 @@ class Gcc < Formula
   depends_on "cloog"
   depends_on "isl"
   depends_on "ecj" if build.with?("java") || build.with?("all-languages")
+  depends_on "binutils" if build.with? "sysroot"
+  depends_on "glibc" if build.with? "sysroot"
 
   if MacOS.version < :leopard && OS.mac?
     # The as that comes with Tiger isn't capable of dealing with the
@@ -70,6 +73,9 @@ class Gcc < Formula
   def install
     # GCC will suffer build errors if forced to use a particular linker.
     ENV.delete "LD"
+    # Setting rpath without also setting dynamic-linker causes this error:
+    # libgomp: configure: error: cannot run C compiled programs.
+    ENV.delete "LD_RUN_PATH"
 
     if OS.mac? && MacOS.version < :leopard
       ENV["AS"] = ENV["AS_FOR_TARGET"] = "#{Formula["cctools"].bin}/as"
@@ -86,8 +92,18 @@ class Gcc < Formula
 
     args = []
     args << "--build=#{arch}-apple-darwin#{osmajor}" if OS.mac?
+    if build.with? "sysroot"
+      args += [
+        "--with-sysroot=#{HOMEBREW_PREFIX}",
+        "--prefix=/Cellar/#{name}/#{version}",
+        "--with-native-system-header-dir=/opt/glibc/include",
+        "--with-build-time-tools=/opt/binutils/bin",
+        "--with-boot-ldflags=-static-libstdc++ -static-libgcc #{ENV["LDFLAGS"]}",
+      ]
+    else
+      args << "--prefix=#{prefix}"
+    end
     args += [
-      "--prefix=#{prefix}",
       "--enable-languages=#{languages.join(",")}",
       # Make most executables versioned to avoid conflicts.
       "--program-suffix=-#{version_suffix}",
@@ -144,7 +160,11 @@ class Gcc < Formula
 
       system "../configure", *args
       system "make", "bootstrap"
-      system "make", "install"
+      if build.with? "sysroot"
+        system "make", "install", "DESTDIR=#{HOMEBREW_PREFIX}"
+      else
+        system "make", "install"
+      end
 
       if build.with?("fortran") || build.with?("all-languages")
         bin.install_symlink bin/"gfortran-#{version_suffix}" => "gfortran"

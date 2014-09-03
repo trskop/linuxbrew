@@ -6,8 +6,8 @@ class Binutils < Formula
   mirror 'http://ftp.gnu.org/gnu/binutils/binutils-2.24.tar.gz'
   sha1 '1b2bc33003f4997d38fadaa276c1f0321329ec56'
 
-  # No --default-names option as it interferes with Homebrew builds.
-  option "default-names", "Do not prepend 'g' to the binary" if OS.linux?
+  option "default-names", "Do not prepend 'g' to the binary"
+  option "with-sysroot", "Compile binutils for use with a sysroot GCC"
 
   bottle do
     sha1 "b411f528adb58ccdf068832b84f35da97e510ec9" => :mavericks
@@ -18,7 +18,8 @@ class Binutils < Formula
   def install
     system "./configure", "--disable-debug",
                           "--disable-dependency-tracking",
-                          ("--program-prefix=g" unless build.include? 'default-names'),
+                          ("--program-prefix=g" unless build.include? "default-names"),
+                          ("--with-sysroot=#{HOMEBREW_PREFIX}" if build.with? "sysroot"),
                           "--prefix=#{prefix}",
                           "--infodir=#{info}",
                           "--mandir=#{man}",

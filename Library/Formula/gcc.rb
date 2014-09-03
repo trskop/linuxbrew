@@ -47,7 +47,7 @@ class Gcc < Formula
   depends_on "isl"
   depends_on "ecj" if build.with?("java") || build.with?("all-languages")
   depends_on "binutils" if build.with? "sysroot"
-  depends_on "glibc" if build.with? "sysroot"
+  depends_on "glibc-sysroot" if build.with? "sysroot"
 
   if MacOS.version < :leopard && OS.mac?
     # The as that comes with Tiger isn't capable of dealing with the
@@ -96,7 +96,7 @@ class Gcc < Formula
       args += [
         "--with-sysroot=#{HOMEBREW_PREFIX}",
         "--prefix=/Cellar/#{name}/#{version}",
-        "--with-native-system-header-dir=/opt/glibc/include",
+        "--with-native-system-header-dir=/opt/glibc-sysroot/include",
         "--with-build-time-tools=/opt/binutils/bin",
         "--with-boot-ldflags=-static-libstdc++ -static-libgcc #{ENV["LDFLAGS"]}",
       ]

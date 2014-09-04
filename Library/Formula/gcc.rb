@@ -73,9 +73,6 @@ class Gcc < Formula
   def install
     # GCC will suffer build errors if forced to use a particular linker.
     ENV.delete "LD"
-    # Setting rpath without also setting dynamic-linker causes this error:
-    # libgomp: configure: error: cannot run C compiled programs.
-    ENV.delete "LD_RUN_PATH"
 
     if OS.mac? && MacOS.version < :leopard
       ENV["AS"] = ENV["AS_FOR_TARGET"] = "#{Formula["cctools"].bin}/as"

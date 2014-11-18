@@ -36,7 +36,9 @@ EOS
   def install
     ENV.universal_binary
     system "./configure", "--prefix=#{prefix}", "--enable-multibyte"
-    system "make install"
+    # Link against ncurses.
+    # See http://www.linuxfromscratch.org/lfs/view/stable/chapter06/readline.html
+    system "make", "install", "SHLIB_LIBS=-lncurses"
 
     # The 6.3 release notes say:
     #   When creating shared libraries on Mac OS X, the pathname written into the

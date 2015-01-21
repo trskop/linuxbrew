@@ -11,16 +11,24 @@ class Ghc < Formula
 
   option "32-bit"
   option "tests", "Verify the build using the testsuite."
+  option "libgmp.so.10", "Linux system provides libgmp.so.10 and not libgmp.so.3"
 
   # http://hackage.haskell.org/trac/ghc/ticket/6009
   depends_on :macos => :snow_leopard
   depends_on "gmp"
   depends_on "gcc" if MacOS.version == :mountain_lion
 
-  if OS.linux?
+  if OS.linux? && !(build.include? "libgmp.so.10")
     resource "binary" do
+      # Requires "libgmp.so.3" to be available on running system. This is not
+      # true for newer Linux systems and brew installed "gmp" provides "libgmp.so.10".
       url "http://www.haskell.org/ghc/dist/7.4.2/ghc-7.4.2-x86_64-unknown-linux.tar.bz2"
       sha256 "da962575e2503dec250252d72a94b6bf69baef7a567b88e90fd6400ada527210"
+    end
+  elsif OS.linux?
+    resource "binary" do
+      url "https://www.haskell.org/ghc/dist/7.8.3/ghc-7.8.3-x86_64-unknown-linux-deb7.tar.xz"
+      sha256 "7758334d7224e458c6b9f113f6b954a2c3a90cfdaa56abc7aea58f7da18fc880"
     end
   elsif build.build_32_bit? || !MacOS.prefer_64_bit?
     resource "binary" do
